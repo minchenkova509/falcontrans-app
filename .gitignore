@@ -14,9 +14,12 @@ venv.bak/
 instance/
 .webassets-cache
 
-# Uploads
+# Uploads (local development only)
 uploads/
 data.json
+
+# Production uploads (on persistent disk)
+/opt/render/project/src/uploads/
 
 # IDE
 .vscode/
