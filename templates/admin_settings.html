@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки - FalconTrans{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog"></i> Настройки уведомлений
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Email адреса для уведомлений:</h6>
+                
+                <div class="mb-4">
+                    <h6>Водители:</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Еремин</strong>
+                            <span class="text-muted">driver1@falcontrans.com</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Уранов</strong>
+                            <span class="text-muted">driver2@falcontrans.com</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Падалец</strong>
+                            <span class="text-muted">driver3@falcontrans.com</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Новиков</strong>
+                            <span class="text-muted">driver4@falcontrans.com</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Администратор:</h6>
+                    <div class="alert alert-info">
+                        <strong>Email:</strong> admin@falcontrans.com
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Важно:</strong> Для работы уведомлений необходимо настроить переменные окружения MAIL_USERNAME и MAIL_PASSWORD в Render.
+                </div>
+                
+                <a href="{{ url_for('admin_panel') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Назад к панели
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

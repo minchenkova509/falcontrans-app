@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
@@ -6,6 +7,16 @@ import json
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
+
+# Email конфигурация
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
+
+mail = Mail(app)
 
 # Конфигурация
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
@@ -19,14 +30,15 @@ os.makedirs(os.path.join(UPLOAD_FOLDER, 'requests'), exist_ok=True)
 
 # Данные водителей
 DRIVERS = {
-    'Еремин': {'password': 'driver1', 'name': 'Еремин'},
-    'Уранов': {'password': 'driver2', 'name': 'Уранов'},
-    'Падалец': {'password': 'driver3', 'name': 'Падалец'},
-    'Новиков': {'password': 'driver4', 'name': 'Новиков'}
+    'Еремин': {'password': 'driver1', 'name': 'Еремин', 'email': 'driver1@falcontrans.com'},
+    'Уранов': {'password': 'driver2', 'name': 'Уранов', 'email': 'driver2@falcontrans.com'},
+    'Падалец': {'password': 'driver3', 'name': 'Падалец', 'email': 'driver3@falcontrans.com'},
+    'Новиков': {'password': 'driver4', 'name': 'Новиков', 'email': 'driver4@falcontrans.com'}
 }
 
 # Админ
 ADMIN_PASSWORD = 'admin123'
+ADMIN_EMAIL = 'admin@falcontrans.com'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -41,6 +53,47 @@ def load_data():
 def save_data(data):
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+def send_notification_email(to_email, subject, body):
+    """Отправка email уведомления"""
+    try:
+        msg = Message(subject, recipients=[to_email])
+        msg.body = body
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Ошибка отправки email: {e}")
+        return False
+
+def notify_admin_new_document(driver_name, filename, request_number):
+    """Уведомление админа о новом документе"""
+    subject = f"Новый документ от водителя {driver_name}"
+    body = f"""
+Новый документ загружен в систему FalconTrans
+
+Водитель: {driver_name}
+Файл: {filename}
+Номер заявки: {request_number if request_number else 'Не указан'}
+Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}
+
+Для просмотра перейдите в панель администратора.
+"""
+    return send_notification_email(ADMIN_EMAIL, subject, body)
+
+def notify_driver_new_request(driver_name, request_number, filename):
+    """Уведомление водителя о новой заявке"""
+    driver_email = DRIVERS[driver_name]['email']
+    subject = f"Новая заявка #{request_number}"
+    body = f"""
+Новая заявка доступна в системе FalconTrans
+
+Номер заявки: {request_number}
+Файл: {filename}
+Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}
+
+Для просмотра заявки войдите в систему как водитель {driver_name}.
+"""
+    return send_notification_email(driver_email, subject, body)
 
 @app.route('/')
 def index():
@@ -109,7 +162,10 @@ def upload_document(driver_name):
         })
         save_data(data)
         
-        flash('Документ успешно загружен!')
+        # Отправляем уведомление админу
+        notify_admin_new_document(driver_name, filename, request_number)
+        
+        flash('Документ успешно загружен! Уведомление отправлено администратору.')
     else:
         flash('Недопустимый тип файла!')
     
@@ -174,7 +230,10 @@ def upload_request():
         })
         save_data(data)
         
-        flash('Заявка успешно загружена!')
+        # Отправляем уведомление водителю
+        notify_driver_new_request(driver, request_number, filename)
+        
+        flash('Заявка успешно загружена! Уведомление отправлено водителю.')
     else:
         flash('Недопустимый тип файла!')
     
@@ -229,6 +288,13 @@ def ping():
 def keep_alive():
     """Страница для поддержания активности приложения"""
     return render_template('keep_alive.html')
+
+@app.route('/admin/settings')
+def admin_settings():
+    """Страница настроек администратора"""
+    if 'admin' not in session:
+        return redirect(url_for('admin_login'))
+    return render_template('admin_settings.html')
 
 @app.route('/logout')
 def logout():
