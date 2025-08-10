@@ -182,15 +182,43 @@ def upload_request():
 
 @app.route('/download/<folder>/<filename>')
 def download_file(folder, filename):
-    if 'admin' not in session:
-        return redirect(url_for('admin_login'))
+    # Проверяем права доступа
+    if 'admin' not in session and 'driver' not in session:
+        return redirect(url_for('index'))
     
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], folder, filename)
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
-    else:
+    if not os.path.exists(file_path):
         flash('Файл не найден!')
-        return redirect(url_for('admin_panel'))
+        if 'admin' in session:
+            return redirect(url_for('admin_panel'))
+        else:
+            return redirect(url_for('driver_panel', driver_name=session['driver']))
+    
+    # Если это водитель, проверяем права доступа
+    if 'driver' in session:
+        data = load_data()
+        if folder == 'requests':
+            # Проверяем что заявка предназначена для этого водителя
+            request_found = False
+            for req in data['requests']:
+                if req['filename'] == filename and req['driver'] == session['driver']:
+                    request_found = True
+                    break
+            if not request_found:
+                flash('Доступ запрещен!')
+                return redirect(url_for('driver_panel', driver_name=session['driver']))
+        elif folder == 'documents':
+            # Проверяем что документ принадлежит этому водителю
+            document_found = False
+            for doc in data['documents']:
+                if doc['filename'] == filename and doc['driver'] == session['driver']:
+                    document_found = True
+                    break
+            if not document_found:
+                flash('Доступ запрещен!')
+                return redirect(url_for('driver_panel', driver_name=session['driver']))
+    
+    return send_file(file_path, as_attachment=True)
 
 @app.route('/logout')
 def logout():
@@ -198,4 +226,6 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000))) 
+    port = int(os.environ.get('PORT', 8080))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug, host='0.0.0.0', port=port) 
