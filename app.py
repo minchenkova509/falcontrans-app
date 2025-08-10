@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
 from werkzeug.utils import secure_filename
-from PIL import Image
 import os
 from datetime import datetime
 import json
-import io
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
@@ -43,30 +41,6 @@ def load_data():
 def save_data(data):
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
-def compress_image(image_file, max_size=(1920, 1080), quality=85):
-    """Сжимает изображение для уменьшения размера"""
-    try:
-        # Открываем изображение
-        image = Image.open(image_file)
-        
-        # Конвертируем в RGB если нужно
-        if image.mode in ('RGBA', 'LA', 'P'):
-            image = image.convert('RGB')
-        
-        # Изменяем размер если изображение слишком большое
-        if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
-            image.thumbnail(max_size, Image.Resampling.LANCZOS)
-        
-        # Сохраняем сжатое изображение в байты
-        output = io.BytesIO()
-        image.save(output, format='JPEG', quality=quality, optimize=True)
-        output.seek(0)
-        
-        return output
-    except Exception as e:
-        print(f"Ошибка сжатия изображения: {e}")
-        return None
 
 def get_file_size_mb(file_path):
     """Возвращает размер файла в МБ"""
@@ -131,38 +105,10 @@ def upload_document(driver_name):
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        new_filename = f"{driver_name}_{timestamp}_{filename}"
         
-        # Определяем расширение файла
-        file_ext = filename.rsplit('.', 1)[1].lower()
-        
-        # Если это изображение, сжимаем его
-        if file_ext in ['jpg', 'jpeg', 'png']:
-            compressed_image = compress_image(file)
-            if compressed_image:
-                # Создаем новое имя файла с .jpg
-                new_filename = f"{driver_name}_{timestamp}_{filename.rsplit('.', 1)[0]}.jpg"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', new_filename)
-                
-                # Сохраняем сжатое изображение
-                with open(file_path, 'wb') as f:
-                    f.write(compressed_image.getvalue())
-                
-                # Показываем информацию о сжатии
-                original_size = len(file.read())
-                compressed_size = os.path.getsize(file_path)
-                compression_ratio = round((1 - compressed_size / original_size) * 100, 1)
-                
-                flash(f'Документ успешно загружен! Размер уменьшен на {compression_ratio}%')
-            else:
-                # Если сжатие не удалось, сохраняем оригинал
-                new_filename = f"{driver_name}_{timestamp}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'documents', new_filename))
-                flash('Документ загружен (сжатие не удалось)')
-        else:
-            # Для PDF файлов сохраняем как есть
-            new_filename = f"{driver_name}_{timestamp}_{filename}"
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'documents', new_filename))
-            flash('Документ успешно загружен!')
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'documents', new_filename))
+        flash('Документ успешно загружен!')
         
         data = load_data()
         
