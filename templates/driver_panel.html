@@ -16,6 +16,11 @@
                     <div class="mb-3">
                         <label for="file" class="form-label">Выберите файл (PDF, JPEG, PNG)</label>
                         <input type="file" class="form-control" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Изображения автоматически сжимаются для экономии места. 
+                            Максимальный размер: 1920x1080 пикселей.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="request_number" class="form-label">Номер заявки (необязательно)</label>
@@ -49,6 +54,7 @@
                                         {% if doc.request_number %}
                                         <br>Заявка: {{ doc.request_number }}
                                         {% endif %}
+                                        <br>Размер: {{ doc.size_mb if doc.size_mb else 'N/A' }} МБ
                                     </small>
                                 </div>
                                 <div class="d-flex align-items-center">

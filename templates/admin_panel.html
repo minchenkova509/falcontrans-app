@@ -99,6 +99,7 @@
                                     <th>Файл</th>
                                     <th>Заявка</th>
                                     <th>Дата загрузки</th>
+                                    <th>Размер</th>
                                     <th>Действия</th>
                                 </tr>
                             </thead>
@@ -117,6 +118,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ doc.upload_time[:19].replace('T', ' ') }}</td>
+                                    <td>{{ doc.size_mb if doc.size_mb else 'N/A' }} МБ</td>
                                     <td>
                                         <a href="{{ url_for('download_file', folder='documents', filename=doc.filename) }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-download"></i> Скачать
