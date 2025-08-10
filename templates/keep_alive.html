@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalconTrans - Keep Alive</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #f8f9fa;
+        }
+        .status {
+            color: #28a745;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .time {
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔄 FalconTrans Keep Alive</h1>
+    <div class="status" id="status">Приложение активно</div>
+    <div class="time" id="time"></div>
+    
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = 
+                'Последнее обновление: ' + now.toLocaleString('ru-RU');
+        }
+        
+        function pingApp() {
+            fetch('/ping')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').textContent = 
+                        '✅ Приложение активно - ' + new Date().toLocaleTimeString('ru-RU');
+                })
+                .catch(error => {
+                    document.getElementById('status').textContent = 
+                        '❌ Ошибка соединения - ' + new Date().toLocaleTimeString('ru-RU');
+                });
+        }
+        
+        // Обновляем каждые 5 минут
+        setInterval(pingApp, 5 * 60 * 1000);
+        setInterval(updateTime, 1000);
+        
+        // Первый пинг сразу
+        pingApp();
+        updateTime();
+    </script>
+</body>
+</html> 

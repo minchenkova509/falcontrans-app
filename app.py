@@ -220,6 +220,16 @@ def download_file(folder, filename):
     
     return send_file(file_path, as_attachment=True)
 
+@app.route('/ping')
+def ping():
+    """Маршрут для поддержания активности приложения"""
+    return {'status': 'alive', 'timestamp': datetime.now().isoformat()}
+
+@app.route('/keep-alive')
+def keep_alive():
+    """Страница для поддержания активности приложения"""
+    return render_template('keep_alive.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
