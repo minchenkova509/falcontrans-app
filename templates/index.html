@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Транспортная компания{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="card-title mb-4">
+                    <i class="fas fa-truck"></i> Транспортная компания
+                </h2>
+                <p class="card-text mb-4">Выберите водителя для входа в систему</p>
+                
+                <div class="row">
+                    {% for driver in drivers %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card driver-card h-100" onclick="window.location.href='{{ url_for('driver_login', driver_name=driver) }}'">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-tie fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">{{ driver }}</h5>
+                                <p class="card-text">Войти как водитель</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-shield"></i> Войти как администратор
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
